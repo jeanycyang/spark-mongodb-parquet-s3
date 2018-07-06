@@ -52,6 +52,7 @@ object Introduction extends TourHelper {
     println("COUNT:" + rdd.count)
     println(rdd.first.toJson)
     println("---------------------------")
+    sc.stop
   }
 
 }
