@@ -14,5 +14,7 @@ libraryDependencies ++= Seq(
     "org.apache.spark" %% "spark-core" % "2.2.0" % "provided",
     "org.apache.spark" %% "spark-sql" % "2.2.0" % "provided",
     // Third-party libraries
-    "org.mongodb.spark" %% "mongo-spark-connector" % "2.2.3"
+    "org.mongodb.spark" %% "mongo-spark-connector" % "2.2.3",
+    // https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-aws
+    "org.apache.hadoop" % "hadoop-aws" % "2.7.3"
 )

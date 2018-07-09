@@ -42,6 +42,10 @@ object Introduction extends TourHelper {
    */
   def main(args: Array[String]): Unit = {
     val sc = getSparkContext(args) // Don't copy and paste as its already configured in the shell
+    val accessKeyId = System.getenv("AWS_ACCESS_KEY_ID")
+    val secretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY")
+    sc.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", accessKeyId)
+    sc.hadoopConfiguration.set("fs.s3n.awsSecretAccessKey", secretAccessKey)
 
     import com.mongodb.spark._
     import com.mongodb.spark.config._
@@ -49,20 +53,15 @@ object Introduction extends TourHelper {
 
     // Loading and analyzing data from MongoDB
     val rdd = MongoSpark.load(sc)
-    println("---------------------------")
-    println("COUNT:" + rdd.count)
-    println(rdd.first.toJson)
-    println("---------------------------")
-
     val aggregation = """
       {"$match": { action: "graphql:getClassrooms" } }
       {"$project": { date: { "$dateFromString": { dateString: "$timestamp"  }  } }}
-      {"$match": { date: {$gte: ISODate("2013-07-03T00:00:00.0Z"), $lt: ISODate("2018-07-04T00:00:00.0Z")} } }
+      {"$match": { date: {$gte: ISODate("2018-07-03T00:00:00.0Z"), $lt: ISODate("2018-07-04T00:00:00.0Z")} } }
     """
     val aggregatedRdd = rdd.withPipeline(Seq(Document.parse(aggregation)))
     println("AGG COUNT:" + aggregatedRdd.count)
     val df = aggregatedRdd.toDF()
-    df.write.mode("overwrite").parquet("/tmp/testparquet")
+    df.write.parquet("s3a://facil-event-log-dev/2018-07-03")
     sc.stop
   }
 
