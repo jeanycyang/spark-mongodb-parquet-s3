@@ -11,7 +11,7 @@ trait ConnectionHelper {
   }
 
   def getSparkSession(args: Array[String]): SparkSession = {
-    val uri: String = args.headOption.getOrElse("mongodb://localhost/event-log.logs")
+    val uri = scala.util.Properties.envOrElse("MONGODB_URI", "mongodb://localhost/event-log.logs" )
 
     val conf = new SparkConf()
       .setMaster("local[*]")
@@ -42,6 +42,7 @@ object Program extends ConnectionHelper {
     val secretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY")
     sc.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", accessKeyId)
     sc.hadoopConfiguration.set("fs.s3n.awsSecretAccessKey", secretAccessKey)
+    val s3BucketName = System.getenv("S3_BUCKET_NAME")
 
     import com.mongodb.spark._
     import com.mongodb.spark.config._
@@ -50,22 +51,40 @@ object Program extends ConnectionHelper {
     // get today & yesterday
     import java.util.Calendar
     import java.text.SimpleDateFormat
-    val cal = Calendar.getInstance()
     val dateFormat = new SimpleDateFormat("yyyy-MM-dd")
-    val today = dateFormat.format(cal.getTime())
-    cal.add(Calendar.DATE, -1)
-    val yesterday = dateFormat.format(cal.getTime())
+
+    val input: String = args.headOption.getOrElse("")
+    var date = ""
+    var bound = ""
+    if (input.isEmpty) {
+      val cal = Calendar.getInstance()
+      val today = dateFormat.format(cal.getTime())
+      cal.add(Calendar.DATE, -1)
+      val yesterday = dateFormat.format(cal.getTime())
+      date = yesterday
+      bound = today
+    } else {
+      date = input
+      val cal = Calendar.getInstance()
+      cal.setTime(dateFormat.parse(input))
+      cal.add(Calendar.DATE, 1)
+      bound = dateFormat.format(cal.getTime())
+    }
+
+    val aggregation = s"""
+      {"$$addFields": { date: { "$$dateFromString": { dateString: "$$timestamp"  }  } }}
+      {"$$match": { date: {$$gte: ISODate("$date"), $$lt: ISODate("$bound")} } }
+      {"$$project" : { date: 0, "@timestamp": 0 } }
+    """
+    println("aggregation: ")
+    println(aggregation)
 
     // Loading and analyzing data from MongoDB
     val rdd = MongoSpark.load(sc)
-    val aggregation = s"""
-      {"$$project": { date: { "$$dateFromString": { dateString: "$$timestamp"  }  } }}
-      {"$$match": { date: {$$gte: ISODate("$yesterday"), $$lt: ISODate("$today")} } }
-    """
     val aggregatedRdd = rdd.withPipeline(Seq(Document.parse(aggregation)))
-    println("AGG COUNT:" + aggregatedRdd.count)
+    println("ROWS COUNT: " + aggregatedRdd.count)
     val df = aggregatedRdd.toDF()
-    df.write.parquet(s"s3a://facil-event-log-dev/$yesterday")
+    df.write.parquet(s"s3a://$s3BucketName/$date")
     sc.stop
   }
 
