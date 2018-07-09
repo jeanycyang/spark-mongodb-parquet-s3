@@ -45,6 +45,7 @@ object Introduction extends TourHelper {
 
     import com.mongodb.spark._
     import com.mongodb.spark.config._
+    import org.bson.Document
 
     // Loading and analyzing data from MongoDB
     val rdd = MongoSpark.load(sc)
@@ -52,8 +53,16 @@ object Introduction extends TourHelper {
     println("COUNT:" + rdd.count)
     println(rdd.first.toJson)
     println("---------------------------")
-    val df = rdd.toDF()
-    df.write.parquet("/tmp/testparquet")
+
+    val aggregation = """
+      {"$match": { action: "graphql:getClassrooms" } }
+      {"$project": { date: { "$dateFromString": { dateString: "$timestamp"  }  } }}
+      {"$match": { date: {$gte: ISODate("2013-07-03T00:00:00.0Z"), $lt: ISODate("2018-07-04T00:00:00.0Z")} } }
+    """
+    val aggregatedRdd = rdd.withPipeline(Seq(Document.parse(aggregation)))
+    println("AGG COUNT:" + aggregatedRdd.count)
+    val df = aggregatedRdd.toDF()
+    df.write.mode("overwrite").parquet("/tmp/testparquet")
     sc.stop
   }
 
