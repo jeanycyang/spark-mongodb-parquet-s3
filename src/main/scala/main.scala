@@ -47,17 +47,25 @@ object Program extends ConnectionHelper {
     import com.mongodb.spark.config._
     import org.bson.Document
 
+    // get today & yesterday
+    import java.util.Calendar
+    import java.text.SimpleDateFormat
+    val cal = Calendar.getInstance()
+    val dateFormat = new SimpleDateFormat("yyyy-MM-dd")
+    val today = dateFormat.format(cal.getTime())
+    cal.add(Calendar.DATE, -1)
+    val yesterday = dateFormat.format(cal.getTime())
+
     // Loading and analyzing data from MongoDB
     val rdd = MongoSpark.load(sc)
-    val aggregation = """
-      {"$match": { action: "graphql:getClassrooms" } }
-      {"$project": { date: { "$dateFromString": { dateString: "$timestamp"  }  } }}
-      {"$match": { date: {$gte: ISODate("2018-07-03T00:00:00.0Z"), $lt: ISODate("2018-07-04T00:00:00.0Z")} } }
+    val aggregation = s"""
+      {"$$project": { date: { "$$dateFromString": { dateString: "$$timestamp"  }  } }}
+      {"$$match": { date: {$$gte: ISODate("$yesterday"), $$lt: ISODate("$today")} } }
     """
     val aggregatedRdd = rdd.withPipeline(Seq(Document.parse(aggregation)))
     println("AGG COUNT:" + aggregatedRdd.count)
     val df = aggregatedRdd.toDF()
-    df.write.parquet("s3a://facil-event-log-dev/2018-07-03")
+    df.write.parquet(s"s3a://facil-event-log-dev/$yesterday")
     sc.stop
   }
 
