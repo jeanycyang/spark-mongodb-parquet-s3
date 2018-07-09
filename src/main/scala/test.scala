@@ -52,6 +52,8 @@ object Introduction extends TourHelper {
     println("COUNT:" + rdd.count)
     println(rdd.first.toJson)
     println("---------------------------")
+    val df = rdd.toDF()
+    df.write.parquet("/tmp/testparquet")
     sc.stop
   }
 
