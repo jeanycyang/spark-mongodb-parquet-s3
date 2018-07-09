@@ -4,10 +4,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import com.mongodb.spark.MongoConnector
 import com.mongodb.spark.config.WriteConfig
 
-/**
- * A helper for the tour
- */
-trait TourHelper {
+trait ConnectionHelper {
 
   def getSparkContext(args: Array[String]): SparkContext = {
     getSparkSession(args).sparkContext
@@ -32,8 +29,7 @@ trait TourHelper {
 
 }
 
-object Introduction extends TourHelper {
-
+object Program extends ConnectionHelper {
   /**
    * Run this main method to see the output of this quick example or copy the code into the spark shell
    *
