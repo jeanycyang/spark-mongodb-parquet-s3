@@ -1,7 +1,12 @@
 lazy val root = (project in file("."))
   .settings(SparkSubmit.settings: _*)
 
-name := "MongoDB to S3"
+assemblyMergeStrategy in assembly := {
+ case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+ case x => MergeStrategy.first
+}
+
+name := "MongoDB-to-S3"
 
 version := "1.0"
 
