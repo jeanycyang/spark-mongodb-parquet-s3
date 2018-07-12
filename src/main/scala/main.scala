@@ -6,15 +6,13 @@ import com.mongodb.spark.config.WriteConfig
 
 trait ConnectionHelper {
 
-  def getSparkContext(args: Array[String]): SparkContext = {
-    getSparkSession(args).sparkContext
+  def getSparkContext(uri: String): SparkContext = {
+    getSparkSession(uri).sparkContext
   }
 
-  def getSparkSession(args: Array[String]): SparkSession = {
-    val uri = scala.util.Properties.envOrElse("MONGODB_URI", "mongodb://localhost/event-log.logs" )
-
+  def getSparkSession(uri: String): SparkSession = {
     val conf = new SparkConf()
-      .setMaster("local[*]")
+      // .setMaster("local[*]")
       .setAppName("MongoSparkConnectorTour")
       .set("spark.app.id", "MongoSparkConnectorTour")
       .set("spark.mongodb.input.uri", uri)
@@ -37,12 +35,21 @@ object Program extends ConnectionHelper {
    * @throws Throwable if an operation fails
    */
   def main(args: Array[String]): Unit = {
-    val sc = getSparkContext(args) // Don't copy and paste as its already configured in the shell
-    val accessKeyId = System.getenv("AWS_ACCESS_KEY_ID")
-    val secretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY")
-    sc.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", accessKeyId)
-    sc.hadoopConfiguration.set("fs.s3n.awsSecretAccessKey", secretAccessKey)
-    val s3BucketName = System.getenv("S3_BUCKET_NAME")
+    val input: String = args.headOption.getOrElse("")
+    println("input date: ")
+    println(input)
+    val uri: String = args(1) //System.getenv("MONGODB_URI")
+    println("uri: ")
+    println(uri)
+    val s3BucketName: String = args(2)
+    println("S3_BUCKET_NAME: ")
+    println(s3BucketName)
+
+    val sc = getSparkContext(uri)
+    // val accessKeyId = System.getenv("AWS_ACCESS_KEY_ID")
+    // val secretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY")
+    // sc.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", accessKeyId)
+    // sc.hadoopConfiguration.set("fs.s3n.awsSecretAccessKey", secretAccessKey)
 
     import com.mongodb.spark._
     import com.mongodb.spark.config._
@@ -53,7 +60,6 @@ object Program extends ConnectionHelper {
     import java.text.SimpleDateFormat
     val dateFormat = new SimpleDateFormat("yyyy-MM-dd")
 
-    val input: String = args.headOption.getOrElse("")
     var date = ""
     var bound = ""
     if (input.isEmpty) {
