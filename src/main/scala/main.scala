@@ -94,7 +94,7 @@ object Program extends ConnectionHelper {
     ))
     println("ROWS COUNT: " + aggregatedRdd.count)
     val df = aggregatedRdd.toDF()
-    df.write.parquet(s"s3a://$s3BucketName/$date")
+    df.write.parquet(s"s3://$s3BucketName/$date")
     sc.stop
   }
 
