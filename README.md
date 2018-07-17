@@ -9,3 +9,8 @@
 ```bash
 $ sbt "sparkSubmit --class Program -- yyyy-MM-dd mongodb://xxx,xxx event-log-storage"
 ```
+
+### How to Package
+```bash
+$ sbt assembly
+```
