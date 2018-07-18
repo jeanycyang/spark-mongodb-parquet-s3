@@ -87,8 +87,11 @@ object Program extends ConnectionHelper {
       Document.parse(matchDate)
     ))
     println("ROWS COUNT: " + aggregatedRdd.count)
+    val Array(year, month, day) = date.split("-")
+    val destination = s"s3n://$s3BucketName/year=$year/month=$month/day=$day"
+    println("Data will be written to: " + destination)
     val df = aggregatedRdd.toDF()
-    df.write.parquet(s"s3://$s3BucketName/$date")
+    df.write.parquet(destination)
     sc.stop
   }
 
