@@ -77,14 +77,20 @@ object Program extends ConnectionHelper {
       bound = dateFormat.format(cal.getTime())
     }
 
-    val matchDate = s"""{"$$match": { @timestamp: {$$gte: ISODate("$date"), $$lt: ISODate("$bound")} } }"""
+    val addFields = s"""{"$$addFields": { date: { "$$dateFromString": { dateString: "$$timestamp"  }  } }}"""
+    val matchDate = s"""{"$$match": { date: {$$gte: ISODate("$date"), $$lt: ISODate("$bound")} } }"""
+    val project = s"""{"$$project" : { date: 0, "@timestamp": 0 } }"""
     println("aggregation: ")
+    println(addFields)
     println(matchDate)
+    println(project)
 
     // Loading and analyzing data from MongoDB
     val rdd = MongoSpark.load(sc)
     val aggregatedRdd = rdd.withPipeline(Seq(
-      Document.parse(matchDate)
+      Document.parse(addFields),
+      Document.parse(matchDate),
+      Document.parse(project)
     ))
     println("ROWS COUNT: " + aggregatedRdd.count)
     val Array(year, month, day) = date.split("-")
