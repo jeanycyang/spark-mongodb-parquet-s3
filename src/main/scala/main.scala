@@ -48,8 +48,8 @@ object Program extends ConnectionHelper {
     val sc = getSparkContext(uri)
     // val accessKeyId = System.getenv("AWS_ACCESS_KEY_ID")
     // val secretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY")
-    // sc.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", accessKeyId)
-    // sc.hadoopConfiguration.set("fs.s3n.awsSecretAccessKey", secretAccessKey)
+    // sc.hadoopConfiguration.set("fs.s3.awsAccessKeyId", accessKeyId)
+    // sc.hadoopConfiguration.set("fs.s3.awsSecretAccessKey", secretAccessKey)
 
     import com.mongodb.spark._
     import com.mongodb.spark.config._
@@ -98,7 +98,7 @@ object Program extends ConnectionHelper {
       println(s"WARNING: $date COUNT = 0")
     } else {
       val Array(year, month, day) = date.split("-")
-      val destination = s"s3n://$s3BucketName/year=$year/month=$month/day=$day"
+      val destination = s"s3://$s3BucketName/year=$year/month=$month/day=$day"
       println("Data will be written to: " + destination)
       val df = aggregatedRdd.toDF()
       df.write.parquet(destination)
