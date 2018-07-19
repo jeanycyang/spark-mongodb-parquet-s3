@@ -8,7 +8,7 @@ assemblyMergeStrategy in assembly := {
 
 name := "MongoDB-to-S3"
 
-version := "1.2"
+version := "1.2.1"
 
 organization := "com.facil"
 
