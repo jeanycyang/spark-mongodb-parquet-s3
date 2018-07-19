@@ -77,7 +77,7 @@ object Program extends ConnectionHelper {
       bound = dateFormat.format(cal.getTime())
     }
 
-    val matchDate = s"""{"$$match": { @timestamp: {$$gte: ISODate("$date"), $$lt: ISODate("$bound")} } }"""
+    val matchDate = s"""{"$$match": { "@timestamp": {$$gte: ISODate("$date"), $$lt: ISODate("$bound")} } }"""
     println("aggregation: ")
     println(matchDate)
 
