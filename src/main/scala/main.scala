@@ -92,12 +92,17 @@ object Program extends ConnectionHelper {
       Document.parse(matchDate),
       Document.parse(project)
     ))
-    println("ROWS COUNT: " + aggregatedRdd.count)
-    val Array(year, month, day) = date.split("-")
-    val destination = s"s3n://$s3BucketName/year=$year/month=$month/day=$day"
-    println("Data will be written to: " + destination)
-    val df = aggregatedRdd.toDF()
-    df.write.parquet(destination)
+    val count = aggregatedRdd.count
+    println("ROWS COUNT: " + count)
+    if (count == 0) {
+      println(s"WARNING: $date COUNT = 0")
+    } else {
+      val Array(year, month, day) = date.split("-")
+      val destination = s"s3n://$s3BucketName/year=$year/month=$month/day=$day"
+      println("Data will be written to: " + destination)
+      val df = aggregatedRdd.toDF()
+      df.write.parquet(destination)
+    }
     sc.stop
   }
 
