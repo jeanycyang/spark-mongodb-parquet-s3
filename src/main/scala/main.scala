@@ -97,10 +97,13 @@ object Program extends ConnectionHelper {
     if (count == 0) {
       println(s"WARNING: $date COUNT = 0")
     } else {
+      val df = aggregatedRdd.toDF()
+      println("====schema====")
+      df.printSchema()
+      println("====schema====")
       val Array(year, month, day) = date.split("-")
       val destination = s"s3://$s3BucketName/year=$year/month=$month/day=$day"
       println("Data will be written to: " + destination)
-      val df = aggregatedRdd.toDF()
       df.write.parquet(destination)
     }
     sc.stop
